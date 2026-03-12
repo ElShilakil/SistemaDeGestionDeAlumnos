@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Gestionar Materias - Control Escolar{% endblock %}
+
+{% block content %}
+<div class="flex flex-col lg:flex-row gap-8">
+    <!-- Registration Form -->
+    <div class="w-full lg:w-1/3">
+        <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-institutionalBlue">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Nueva Materia (NEM)</h2>
+            <form method="POST">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Nombre de la Materia</label>
+                    <input type="text" name="name" class="w-full border rounded p-2 focus:ring-2 focus:ring-institutionalBlue outline-none" placeholder="Ej. Matemáticas" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Campo Formativo</label>
+                    <select name="formative_field" class="w-full border rounded p-2" required>
+                        <option value="">Selecciona un campo...</option>
+                        {% for field in fields %}
+                        <option value="{{ field }}">{{ field }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-institutionalBlue hover:bg-blue-900 text-white font-bold py-2 rounded transition-colors">
+                    Registrar Materia
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Subjects List -->
+    <div class="w-full lg:w-2/3">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Catálogo de Materias</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="p-3 font-semibold text-gray-700">Materia</th>
+                            <th class="p-3 font-semibold text-gray-700">Campo Formativo</th>
+                            <th class="p-3 font-semibold text-gray-700 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject in subjects %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 font-bold text-gray-800">{{ subject.name }}</td>
+                            <td class="p-3">
+                                <span class="bg-blue-50 text-institutionalBlue text-xs px-2 py-1 rounded border border-institutionalBlue font-medium">
+                                    {{ subject.formative_field }}
+                                </span>
+                            </td>
+                            <td class="p-3 text-center">
+                                <a href="{{ url_for('edit_subject', id=subject.id) }}" class="text-institutionalBlue hover:text-blue-900 text-sm font-bold underline">Editar</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

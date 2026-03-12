@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Boletas de Calificaciones - Control Escolar{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <a href="{{ url_for('admin_dashboard') }}" class="text-institutionalBlue hover:underline">&larr; Volver al Dashboard</a>
+    <h1 class="text-3xl font-bold text-gray-800 mt-4">Consulta de Boletas Digitales</h1>
+</div>
+
+<div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-institutionalBlue">
+    <h2 class="text-xl font-bold mb-6 text-gray-800">Selecciona un Estudiante</h2>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-100 border-b">
+                    <th class="p-3 font-semibold text-gray-700">Nombre Completo</th>
+                    <th class="p-3 font-semibold text-gray-700">CURP</th>
+                    <th class="p-3 font-semibold text-gray-700">G/G</th>
+                    <th class="p-3 font-semibold text-gray-700">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 font-bold text-gray-800">{{ student.full_name }}</td>
+                    <td class="p-3 text-sm font-mono text-gray-600">{{ student.curp }}</td>
+                    <td class="p-3 text-sm text-center">
+                        <span class="bg-gray-100 px-2 py-1 rounded">{{ student.grade }}°{{ student.group }}</span>
+                    </td>
+                    <td class="p-3">
+                        <a href="{{ url_for('view_report_card', student_id=student.id) }}" 
+                           class="bg-institutionalGreen hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded shadow transition-colors">
+                            Generar Boleta
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

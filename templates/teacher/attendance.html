@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Asistencia - Control Escolar{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <a href="{{ url_for('teacher_dashboard') }}" class="text-institutionalBlue hover:underline">&larr; Volver al Panel</a>
+    <h1 class="text-3xl font-bold text-gray-800 mt-4">Control de Asistencia</h1>
+</div>
+
+<div class="bg-white p-8 rounded-lg shadow-lg border-t-4 border-institutionalGreen">
+    <form method="POST">
+        <div class="mb-6 flex items-center gap-4">
+            <label class="font-bold text-gray-700">Fecha:</label>
+            <input type="date" name="date" value="{{ today }}" class="border rounded p-2 focus:ring-2 focus:ring-institutionalGreen outline-none" required>
+        </div>
+
+        <div class="overflow-x-auto mb-8">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-100 border-b">
+                        <th class="p-4 font-semibold text-gray-700">Alumno</th>
+                        <th class="p-4 font-semibold text-gray-700 text-center">Presente</th>
+                        <th class="p-4 font-semibold text-gray-700 text-center">Ausente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-4 font-medium text-gray-800">{{ student.full_name }}</td>
+                        <td class="p-4 text-center">
+                            <input type="radio" name="status_{{ student.id }}" value="Present" class="w-5 h-5 accent-institutionalGreen" 
+                                   {% if current_att.get(student.id) == 'Present' or not current_att.get(student.id) %}checked{% endif %}>
+                        </td>
+                        <td class="p-4 text-center">
+                            <input type="radio" name="status_{{ student.id }}" value="Absent" class="w-5 h-5 accent-red-600"
+                                   {% if current_att.get(student.id) == 'Absent' %}checked{% endif %}>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <button type="submit" class="w-full sm:w-1/3 bg-institutionalGreen hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition-colors">
+            Guardar Asistencia
+        </button>
+    </form>
+</div>
+{% endblock %}
