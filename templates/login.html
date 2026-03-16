@@ -3,29 +3,36 @@
 {% block title %}Iniciar Sesión - Control Escolar{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden mt-10">
-    <div class="bg-institutionalBlue py-4 px-6 text-white text-center">
-        <h2 class="text-2xl font-bold">Bienvenido</h2>
-        <p class="text-sm">Ingresa tus credenciales para continuar</p>
-    </div>
-    <form method="POST" class="py-8 px-8">
-        <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-                Correo Electrónico
-            </label>
-            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-institutionalBlue" id="email" name="email" type="email" placeholder="admin@escuela.com" required>
+<div class="max-w-md mx-auto mt-10">
+    <div class="bg-white p-8 rounded-lg shadow-2xl border-t-8 border-deepBlue ring-1 ring-skyBlue ring-opacity-20">
+        <div class="text-center mb-8">
+            <img src="{{ url_for('static', filename='logo.webp') }}" alt="Logo" class="h-20 w-20 mx-auto mb-4" style="mix-blend-mode: multiply;">
+            <h2 class="text-3xl font-black text-charcoal uppercase tracking-tight">Acceso Escolar</h2>
+            <p class="text-gray-500 text-sm italic">Colegio Insurgentes</p>
         </div>
-        <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
-                Contraseña
-            </label>
-            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-institutionalBlue" id="password" name="password" type="password" placeholder="******************" required>
-        </div>
-        <div class="flex items-center justify-between">
-            <button class="bg-institutionalBlue hover:bg-blue-900 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors w-full" type="submit">
-                Entrar
+        <form method="POST">
+            <div class="mb-6">
+                <label class="block text-charcoal text-xs font-black uppercase tracking-widest mb-2">Correo Electrónico</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <i class="fas fa-envelope"></i>
+                    </span>
+                    <input type="email" name="email" class="w-full border-2 border-gray-100 rounded-lg py-3 pl-10 pr-4 focus:border-deepBlue focus:ring-0 outline-none transition-colors" placeholder="tu@email.com" required>
+                </div>
+            </div>
+            <div class="mb-8">
+                <label class="block text-charcoal text-xs font-black uppercase tracking-widest mb-2">Contraseña</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    <input type="password" name="password" class="w-full border-2 border-gray-100 rounded-lg py-3 pl-10 pr-4 focus:border-deepBlue focus:ring-0 outline-none transition-colors" placeholder="••••••••" required>
+                </div>
+            </div>
+            <button type="submit" class="w-full bg-goldenYellow hover:bg-yellow-400 text-charcoal font-black py-4 rounded-lg shadow-lg transform transition-all hover:scale-[1.02] active:scale-95 uppercase tracking-widest">
+                ENTRAR AL SISTEMA
             </button>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 {% endblock %}

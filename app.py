@@ -17,6 +17,26 @@ Session(app)
 
 db = SQLAlchemy(app)
 
+PERMISSIONS = {
+    'admin': [
+        'MANAGE_TEACHERS',
+        'MANAGE_STUDENTS',
+        'MANAGE_ASSIGNMENTS',
+        'MANAGE_SUBJECTS',
+        'VIEW_REPORTS',
+        'VIEW_TEACHER_DASHBOARD',
+        'MANAGE_ATTENDANCE',
+        'MANAGE_ACTIVITIES',
+        'MANAGE_GRADES'
+    ],
+    'teacher': [
+        'VIEW_TEACHER_DASHBOARD',
+        'MANAGE_ATTENDANCE',
+        'MANAGE_ACTIVITIES',
+        'MANAGE_GRADES'
+    ]
+}
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -38,6 +58,10 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def has_permission(self, permission):
+        role_permissions = PERMISSIONS.get(self.role, [])
+        return permission in role_permissions
 
 class Student(db.Model):
     __tablename__ = 'students'
@@ -102,16 +126,24 @@ class Attendance(db.Model):
 
 from functools import wraps
 
-def login_required(role=None):
+def login_required(permission=None):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if 'user_id' not in session:
                 flash("Por favor, inicia sesión para acceder.", "error")
                 return redirect(url_for('login'))
-            if role and session.get('user_role') != role:
+            
+            user = User.query.get(session['user_id'])
+            if not user or not user.is_active:
+                session.clear()
+                flash("Sesión inválida o cuenta desactivada.", "error")
+                return redirect(url_for('login'))
+
+            if permission and not user.has_permission(permission):
                 flash("No tienes permiso para acceder a esta sección.", "error")
                 return redirect(url_for('index'))
+                
             return f(*args, **kwargs)
         return decorated_function
     return decorator
@@ -151,7 +183,7 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/admin/dashboard')
-@login_required(role='admin')
+@login_required(permission='MANAGE_STUDENTS')
 def admin_dashboard():
     teacher_count = User.query.filter_by(role='teacher').count()
     student_count = Student.query.count()
@@ -160,7 +192,7 @@ def admin_dashboard():
 from sqlalchemy.exc import IntegrityError
 
 @app.route('/admin/teachers', methods=['GET', 'POST'])
-@login_required(role='admin')
+@login_required(permission='MANAGE_TEACHERS')
 def manage_teachers():
     if request.method == 'POST':
         first_name = request.form.get('first_name')
@@ -192,7 +224,7 @@ def manage_teachers():
     return render_template('admin/teachers.html', teachers=teachers)
 
 @app.route('/admin/teachers/toggle/<int:id>')
-@login_required(role='admin')
+@login_required(permission='MANAGE_TEACHERS')
 def toggle_teacher(id):
     teacher = User.query.get_or_404(id)
     teacher.is_active = not teacher.is_active
@@ -202,7 +234,7 @@ def toggle_teacher(id):
     return redirect(url_for('manage_teachers'))
 
 @app.route('/admin/teachers/edit/<int:id>', methods=['GET', 'POST'])
-@login_required(role='admin')
+@login_required(permission='MANAGE_TEACHERS')
 def edit_teacher(id):
     teacher = User.query.get_or_404(id)
     if request.method == 'POST':
@@ -231,7 +263,7 @@ def edit_teacher(id):
     return render_template('admin/edit_teacher.html', teacher=teacher)
 
 @app.route('/admin/students', methods=['GET', 'POST'])
-@login_required(role='admin')
+@login_required(permission='MANAGE_STUDENTS')
 def manage_students():
     if request.method == 'POST':
         curp = request.form.get('curp')
@@ -266,7 +298,7 @@ def manage_students():
     return render_template('admin/students.html', students=students)
 
 @app.route('/admin/students/edit/<int:id>', methods=['GET', 'POST'])
-@login_required(role='admin')
+@login_required(permission='MANAGE_STUDENTS')
 def edit_student(id):
     student = Student.query.get_or_404(id)
     if request.method == 'POST':
@@ -294,7 +326,7 @@ def edit_student(id):
     return render_template('admin/edit_student.html', student=student)
 
 @app.route('/admin/assignments', methods=['GET', 'POST'])
-@login_required(role='admin')
+@login_required(permission='MANAGE_ASSIGNMENTS')
 def manage_assignments():
     if request.method == 'POST':
         teacher_id = request.form.get('teacher_id')
@@ -331,7 +363,7 @@ def manage_assignments():
     return render_template('admin/assignments.html', teachers=teachers, assignments=assignments)
 
 @app.route('/admin/subjects', methods=['GET', 'POST'])
-@login_required(role='admin')
+@login_required(permission='MANAGE_SUBJECTS')
 def manage_subjects():
     formative_fields = [
         "Lenguajes",
@@ -352,7 +384,7 @@ def manage_subjects():
     return render_template('admin/subjects.html', subjects=subjects, fields=formative_fields)
 
 @app.route('/admin/subjects/edit/<int:id>', methods=['GET', 'POST'])
-@login_required(role='admin')
+@login_required(permission='MANAGE_SUBJECTS')
 def edit_subject(id):
     subject = Subject.query.get_or_404(id)
     formative_fields = [
@@ -370,7 +402,7 @@ def edit_subject(id):
     return render_template('admin/edit_subject.html', subject=subject, fields=formative_fields)
 
 @app.route('/teacher/dashboard')
-@login_required(role='teacher')
+@login_required(permission='VIEW_TEACHER_DASHBOARD')
 def teacher_dashboard():
     assignment = TeacherAssignment.query.filter_by(teacher_id=session['user_id']).first()
     if not assignment:
@@ -383,7 +415,7 @@ def teacher_dashboard():
     return render_template('teacher/dashboard.html', assignment=assignment, students=students)
 
 @app.route('/teacher/attendance', methods=['GET', 'POST'])
-@login_required(role='teacher')
+@login_required(permission='MANAGE_ATTENDANCE')
 def manage_attendance():
     assignment = TeacherAssignment.query.filter_by(teacher_id=session['user_id']).first()
     if not assignment:
@@ -415,7 +447,7 @@ def manage_attendance():
     return render_template('teacher/attendance.html', students=students, today=today, current_att=current_att)
 
 @app.route('/teacher/activities', methods=['GET', 'POST'])
-@login_required(role='teacher')
+@login_required(permission='MANAGE_ACTIVITIES')
 def manage_activities():
     if request.method == 'POST':
         subject_id = request.form.get('subject_id')
@@ -441,7 +473,7 @@ def manage_activities():
     return render_template('teacher/activities.html', subjects=subjects, activities=activities)
 
 @app.route('/teacher/gradebook', methods=['GET', 'POST'])
-@login_required(role='teacher')
+@login_required(permission='MANAGE_GRADES')
 def gradebook():
     assignment = TeacherAssignment.query.filter_by(teacher_id=session['user_id']).first()
     if not assignment:
@@ -476,14 +508,14 @@ def gradebook():
     return render_template('teacher/gradebook.html', students=students, activities=activities, existing_grades=existing_grades)
 
 @app.route('/admin/reports')
-@login_required(role='admin')
+@login_required(permission='VIEW_REPORTS')
 def list_reports():
     students = Student.query.order_by(Student.grade, Student.group).all()
     students = sorted(students, key=lambda x: x.last_name_paternal)
     return render_template('admin/reports_list.html', students=students)
 
 @app.route('/admin/reports/view/<int:student_id>')
-@login_required()
+@login_required(permission='VIEW_REPORTS')
 def view_report_card(student_id):
     student = Student.query.get_or_404(student_id)
     

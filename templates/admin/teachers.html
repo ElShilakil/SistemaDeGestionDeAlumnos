@@ -6,33 +6,33 @@
 <div class="flex flex-col lg:flex-row gap-8">
     <!-- Registration Form -->
     <div class="w-full lg:w-1/3">
-        <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-institutionalBlue">
-            <h2 class="text-xl font-bold mb-4 text-gray-800">Pre-registro de Profesor</h2>
+        <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-deepBlue ring-1 ring-skyBlue ring-opacity-20">
+            <h2 class="text-xl font-bold mb-4 text-charcoal uppercase tracking-tight">Registro de Profesor</h2>
             <form method="POST">
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Nombre(s)</label>
-                    <input type="text" name="first_name" class="w-full border rounded p-2 focus:ring-2 focus:ring-institutionalBlue outline-none" required>
+                    <label class="block text-charcoal text-xs font-bold uppercase mb-2">Nombre(s)</label>
+                    <input type="text" name="first_name" class="w-full border-2 border-gray-100 rounded p-2 focus:border-deepBlue outline-none transition-colors" required>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Apellido Paterno</label>
-                        <input type="text" name="last_name_paternal" class="w-full border rounded p-2 focus:ring-2 focus:ring-institutionalBlue outline-none" required>
+                        <label class="block text-charcoal text-xs font-bold uppercase mb-2">Apellido Paterno</label>
+                        <input type="text" name="last_name_paternal" class="w-full border-2 border-gray-100 rounded p-2 focus:border-deepBlue outline-none transition-colors" required>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Apellido Materno</label>
-                        <input type="text" name="last_name_maternal" class="w-full border rounded p-2 focus:ring-2 focus:ring-institutionalBlue outline-none">
+                        <label class="block text-charcoal text-xs font-bold uppercase mb-2">Apellido Materno</label>
+                        <input type="text" name="last_name_maternal" class="w-full border-2 border-gray-100 rounded p-2 focus:border-deepBlue outline-none transition-colors">
                     </div>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Correo Electrónico</label>
-                    <input type="email" name="email" class="w-full border rounded p-2 focus:ring-2 focus:ring-institutionalBlue outline-none" required>
+                    <label class="block text-charcoal text-xs font-bold uppercase mb-2">Correo Electrónico</label>
+                    <input type="email" name="email" class="w-full border-2 border-gray-100 rounded p-2 focus:border-deepBlue outline-none transition-colors" required>
                 </div>
                 <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Contraseña Temporal</label>
-                    <input type="password" name="password" class="w-full border rounded p-2 focus:ring-2 focus:ring-institutionalBlue outline-none" required>
+                    <label class="block text-charcoal text-xs font-bold uppercase mb-2">Contraseña Temporal</label>
+                    <input type="password" name="password" class="w-full border-2 border-gray-100 rounded p-2 focus:border-deepBlue outline-none transition-colors" required>
                 </div>
-                <button type="submit" class="w-full bg-institutionalBlue hover:bg-blue-900 text-white font-bold py-2 rounded transition-colors">
-                    Registrar Profesor
+                <button type="submit" class="w-full bg-emeraldGreen hover:bg-green-700 text-white font-bold py-3 rounded shadow transition-colors uppercase tracking-widest text-sm">
+                    Guardar Registro
                 </button>
             </form>
         </div>
@@ -40,35 +40,41 @@
 
     <!-- Teachers List -->
     <div class="w-full lg:w-2/3">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-800">Listado de Profesores</h2>
+        <div class="bg-white p-6 rounded-lg shadow-md ring-1 ring-skyBlue ring-opacity-20">
+            <h2 class="text-xl font-bold mb-4 text-charcoal uppercase tracking-tight">Listado de Profesores</h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-gray-100 border-b">
-                            <th class="p-3 font-semibold text-gray-700">Nombre Completo</th>
-                            <th class="p-3 font-semibold text-gray-700">Email</th>
-                            <th class="p-3 font-semibold text-gray-700">Estado</th>
-                            <th class="p-3 font-semibold text-gray-700">Acciones</th>
+                        <tr class="bg-offWhite border-b border-skyBlue border-opacity-30">
+                            <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Nombre Completo</th>
+                            <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Email</th>
+                            <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Estado</th>
+                            <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for teacher in teachers %}
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-3">{{ teacher.full_name }}</td>
-                            <td class="p-3">{{ teacher.email }}</td>
-                            <td class="p-3">
+                        <tr class="border-b border-gray-50 hover:bg-offWhite transition-colors">
+                            <td class="p-4 text-sm font-bold text-charcoal">{{ teacher.full_name }}</td>
+                            <td class="p-4 text-sm text-gray-600">{{ teacher.email }}</td>
+                            <td class="p-4">
                                 {% if teacher.is_active %}
-                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-bold">Activo</span>
+                                    <span class="bg-green-100 text-emeraldGreen text-[10px] px-2 py-1 rounded-full font-black uppercase tracking-tighter">Activo</span>
                                 {% else %}
-                                    <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-bold">Inactivo</span>
+                                    <span class="bg-red-100 text-red-800 text-[10px] px-2 py-1 rounded-full font-black uppercase tracking-tighter">Inactivo</span>
                                 {% endif %}
                             </td>
-                            <td class="p-3">
-                                <a href="{{ url_for('edit_teacher', id=teacher.id) }}" class="text-institutionalBlue hover:text-blue-900 text-sm font-bold mr-3 underline">Editar</a>
+                            <td class="p-4 flex gap-3">
+                                <a href="{{ url_for('edit_teacher', id=teacher.id) }}" class="text-deepBlue hover:text-blue-900 text-xs font-black uppercase tracking-widest flex items-center">
+                                    <i class="fas fa-edit mr-1"></i> Editar
+                                </a>
                                 <a href="{{ url_for('toggle_teacher', id=teacher.id) }}" 
-                                   class="text-sm font-medium {% if teacher.is_active %}text-red-600 hover:text-red-800{% else %}text-green-600 hover:text-green-800{% endif %} underline">
-                                    {% if teacher.is_active %}Dar de Baja{% else %}Reactivar{% endif %}
+                                   class="text-xs font-black uppercase tracking-widest flex items-center {% if teacher.is_active %}text-red-600 hover:text-red-800{% else %}text-emeraldGreen hover:text-green-800{% endif %}">
+                                    {% if teacher.is_active %}
+                                        <i class="fas fa-user-slash mr-1"></i> Baja
+                                    {% else %}
+                                        <i class="fas fa-user-check mr-1"></i> Alta
+                                    {% endif %}
                                 </a>
                             </td>
                         </tr>
