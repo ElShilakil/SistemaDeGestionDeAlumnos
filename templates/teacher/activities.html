@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="mb-8">
-    <a href="{{ url_for('teacher_dashboard') }}" class="text-deepBlue hover:underline flex items-center">
+    <a href="{{ url_for('teacher.teacher_dashboard') }}" class="text-deepBlue hover:underline flex items-center">
         <i class="fas fa-arrow-left mr-2"></i> Volver al Panel
     </a>
     <h1 class="text-3xl font-bold text-charcoal mt-4 uppercase tracking-tight">Gestión de Actividades</h1>
@@ -47,9 +47,14 @@
                     <label class="block text-charcoal text-xs font-bold uppercase mb-2">Fecha</label>
                     <input type="date" name="date" class="w-full border-2 border-gray-100 rounded p-2 focus:border-deepBlue outline-none transition-colors" required>
                 </div>
-                <button type="submit" class="w-full bg-emeraldGreen hover:bg-green-700 text-white font-black py-3 rounded shadow transition-colors uppercase tracking-widest text-sm">
-                    Crear Actividad
-                </button>
+                <div class="flex flex-col gap-3">
+                    <button type="submit" class="w-full bg-emeraldGreen hover:bg-green-700 text-white font-black py-3 rounded shadow transition-colors uppercase tracking-widest text-sm">
+                        Crear Actividad
+                    </button>
+                    <a href="{{ url_for('teacher.teacher_dashboard') }}" class="w-full text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded transition-colors uppercase tracking-widest text-sm">
+                        Regresar
+                    </a>
+                </div>
             </form>
         </div>
     </div>

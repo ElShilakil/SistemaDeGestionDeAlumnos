@@ -5,7 +5,7 @@
 {% block content %}
 <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-lg border-t-4 border-institutionalBlue">
     <div class="mb-6">
-        <a href="{{ url_for('manage_subjects') }}" class="text-institutionalBlue hover:underline">&larr; Volver</a>
+        <a href="{{ url_for('admin.manage_subjects') }}" class="text-institutionalBlue hover:underline">&larr; Volver</a>
         <h1 class="text-2xl font-bold text-gray-800 mt-2">Editar Materia</h1>
     </div>
 
@@ -27,8 +27,8 @@
             <button type="submit" class="flex-1 bg-institutionalBlue hover:bg-blue-900 text-white font-bold py-2 rounded transition-colors">
                 Guardar Cambios
             </button>
-            <a href="{{ url_for('manage_subjects') }}" class="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 rounded transition-colors">
-                Cancelar
+            <a href="{{ url_for('admin.manage_subjects') }}" class="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 rounded transition-colors">
+                Regresar
             </a>
         </div>
     </form>

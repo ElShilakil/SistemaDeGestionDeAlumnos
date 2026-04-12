@@ -21,6 +21,9 @@
                         skyBlue: '#3FA9F5',
                         charcoal: '#2B2B2B',
                         offWhite: '#F4F4F4',
+                        institutionalBlue: '#2E3192',
+                        institutionalGreen: '#009245',
+                        institutionalGold: '#FFDE17',
                     }
                 }
             }
@@ -69,5 +72,30 @@
         &copy; 2026 Sistema de Control Escolar - SEP NEM Model
     </footer>
 
+    <script>
+    function filterTable() {
+        const input = document.getElementById("searchInput");
+        if (!input) return;
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById("dataTable");
+        if (!table) return;
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            let found = false;
+            const td = tr[i].getElementsByTagName("td");
+            for (let j = 0; j < td.length; j++) {
+                if (td[j]) {
+                    const textValue = td[j].textContent || td[j].innerText;
+                    if (textValue.toUpperCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            tr[i].style.display = found ? "" : "none";
+        }
+    }
+    </script>
 </body>
 </html>

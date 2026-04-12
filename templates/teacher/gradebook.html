@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="mb-8">
-    <a href="{{ url_for('teacher_dashboard') }}" class="text-institutionalBlue hover:underline">&larr; Volver al Panel</a>
+    <a href="{{ url_for('teacher.teacher_dashboard') }}" class="text-institutionalBlue hover:underline">&larr; Volver al Panel</a>
     <h1 class="text-3xl font-bold text-gray-800 mt-4">Registro de Calificaciones</h1>
 </div>
 
@@ -43,10 +43,13 @@
             </tbody>
         </table>
 
-        <div class="mt-8 flex justify-end">
+        <div class="mt-8 flex justify-end gap-4">
             <button type="submit" class="bg-institutionalBlue hover:bg-blue-900 text-white font-bold py-3 px-10 rounded-lg shadow-md transition-colors">
                 Guardar Calificaciones
             </button>
+            <a href="{{ url_for('teacher.teacher_dashboard') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-10 rounded-lg transition-colors">
+                Regresar
+            </a>
         </div>
     </form>
 </div>
