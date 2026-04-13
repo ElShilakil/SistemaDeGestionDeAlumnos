@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from extensions import db
-from models import User, Student, TeacherAssignment, Subject, Grade
+from models import User, Student, TeacherAssignment, Subject, Grade, SchoolPeriod
 from decorators import login_required
 from sqlalchemy.exc import IntegrityError
 import re
@@ -13,7 +13,51 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 def admin_dashboard():
     teacher_count = User.query.filter_by(role='teacher').count()
     student_count = Student.query.filter_by(is_active=True).count()
-    return render_template('admin/dashboard.html', teacher_count=teacher_count, student_count=student_count)
+    active_period = SchoolPeriod.query.filter_by(is_active=True).first()
+    return render_template('admin/dashboard.html', 
+                           teacher_count=teacher_count, 
+                           student_count=student_count, 
+                           active_period=active_period)
+
+@admin_bp.route('/periods', methods=['GET', 'POST'])
+@login_required(permission='MANAGE_ASSIGNMENTS') 
+def manage_periods():
+    if request.method == 'POST':
+        period_id = request.form.get('period_id')
+        name = request.form.get('name')
+        start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date()
+        end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date()
+        is_active = request.form.get('is_active') == 'on'
+
+        if start_date >= end_date:
+            flash("La fecha de inicio debe ser anterior a la fecha de fin.", "error")
+        else:
+            if is_active:
+                SchoolPeriod.query.update({SchoolPeriod.is_active: False})
+            
+            if period_id:
+                period = SchoolPeriod.query.get(period_id)
+                period.name = name
+                period.start_date = start_date
+                period.end_date = end_date
+                period.is_active = is_active
+            else:
+                new_period = SchoolPeriod(name=name, start_date=start_date, end_date=end_date, is_active=is_active)
+                db.session.add(new_period)
+            
+            db.session.commit()
+            flash("Periodo actualizado con éxito.", "success")
+
+    periods = SchoolPeriod.query.all()
+    if not periods:
+        p1 = SchoolPeriod(name="Trimestre 1", start_date=datetime(2023, 8, 28).date(), end_date=datetime(2023, 11, 24).date(), is_active=True)
+        p2 = SchoolPeriod(name="Trimestre 2", start_date=datetime(2023, 11, 27).date(), end_date=datetime(2024, 3, 8).date(), is_active=False)
+        p3 = SchoolPeriod(name="Trimestre 3", start_date=datetime(2024, 3, 11).date(), end_date=datetime(2024, 7, 12).date(), is_active=False)
+        db.session.add_all([p1, p2, p3])
+        db.session.commit()
+        periods = [p1, p2, p3]
+
+    return render_template('admin/periods.html', periods=periods)
 
 @admin_bp.route('/teachers', methods=['GET', 'POST'])
 @login_required(permission='MANAGE_TEACHERS')
@@ -258,24 +302,36 @@ def list_reports():
 @login_required(permission='VIEW_REPORTS')
 def view_report_card(student_id):
     student = Student.query.get_or_404(student_id)
+    periods = SchoolPeriod.query.order_by(SchoolPeriod.start_date).all()
     grades = Grade.query.filter_by(student_id=student_id).all()
     
     subject_data = {}
+    grouped_scores = {}
+    
     for g in grades:
         activity = g.activity
         subj = activity.subject
+        period_id = activity.period_id
+        
         if subj.id not in subject_data:
             subject_data[subj.id] = {
                 'name': subj.name,
                 'field': subj.formative_field,
-                'scores': []
+                'averages': {}
             }
-        subject_data[subj.id]['scores'].append(g.score)
-    
-    for sid in subject_data:
-        scores = subject_data[sid]['scores']
-        subject_data[sid]['average'] = sum(scores) / len(scores) if scores else 0
-    
+        
+        if subj.id not in grouped_scores:
+            grouped_scores[subj.id] = {}
+        
+        if period_id not in grouped_scores[subj.id]:
+            grouped_scores[subj.id][period_id] = []
+            
+        grouped_scores[subj.id][period_id].append(g.score)
+        
+    for subj_id, periods_scores in grouped_scores.items():
+        for period_id, scores in periods_scores.items():
+            subject_data[subj_id]['averages'][period_id] = sum(scores) / len(scores) if scores else 0
+            
     field_data = {}
     formative_fields = [
         "Lenguajes",
@@ -285,17 +341,21 @@ def view_report_card(student_id):
     ]
     
     for field in formative_fields:
-        field_data[field] = {'subjects': [], 'average': 0}
+        field_data[field] = {'subjects': [], 'averages': {}}
         
     for sid in subject_data:
         data = subject_data[sid]
         field_data[data['field']]['subjects'].append(data)
-        
+
     for field in field_data:
         subjs = field_data[field]['subjects']
-        if subjs:
-            field_data[field]['average'] = sum(s['average'] for s in subjs) / len(subjs)
-        else:
-            field_data[field]['average'] = 0
+        for period in periods:
+            period_scores = [s['averages'][period.id] for s in subjs if period.id in s['averages']]
+            if period_scores:
+                field_data[field]['averages'][period.id] = sum(period_scores) / len(period_scores)
             
-    return render_template('admin/view_report.html', student=student, field_data=field_data, today=datetime.now())
+    return render_template('admin/view_report.html', 
+                           student=student, 
+                           field_data=field_data, 
+                           periods=periods,
+                           today=datetime.now())

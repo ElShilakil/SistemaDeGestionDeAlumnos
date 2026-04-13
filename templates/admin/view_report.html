@@ -51,19 +51,29 @@
                 <thead>
                     <tr class="bg-gray-800 text-white">
                         <th class="p-3 border border-gray-800 text-left">Campo Formativo / Materia</th>
-                        <th class="p-3 border border-gray-800 text-center w-32">Promedio</th>
+                        {% for period in periods %}
+                        <th class="p-3 border border-gray-800 text-center w-24">{{ period.name }}</th>
+                        {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for field, data in field_data.items() %}
                     <tr class="bg-gray-100 font-black">
                         <td class="p-3 border border-gray-800 uppercase text-institutionalBlue">{{ field }}</td>
-                        <td class="p-3 border border-gray-800 text-center text-lg">{{ "%.1f"|format(data.average) }}</td>
+                        {% for period in periods %}
+                        <td class="p-3 border border-gray-800 text-center">
+                            {{ "%.1f"|format(data.averages[period.id]) if period.id in data.averages else '-' }}
+                        </td>
+                        {% endfor %}
                     </tr>
                         {% for subj in data.subjects %}
                         <tr class="italic text-gray-700">
                             <td class="p-3 border border-gray-800 pl-10">{{ subj.name }}</td>
-                            <td class="p-3 border border-gray-800 text-center">{{ "%.1f"|format(subj.average) }}</td>
+                            {% for period in periods %}
+                            <td class="p-3 border border-gray-800 text-center">
+                                {{ "%.1f"|format(subj.averages[period.id]) if period.id in subj.averages else '-' }}
+                            </td>
+                            {% endfor %}
                         </tr>
                         {% endfor %}
                     {% endfor %}

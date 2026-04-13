@@ -1,14 +1,14 @@
 import os
 from flask import Flask
 from extensions import db, session_manager
-from utils import create_admin, seed_data
+from utils import create_admin
 
 def create_app():
     app = Flask(__name__)
 
     # Configuración
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key_school_control_123')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgres@localhost/school_system')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgres@localhost/colegio_insurgentes')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SESSION_TYPE'] = 'filesystem'
 

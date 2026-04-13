@@ -3,6 +3,19 @@
 {% block title %}Dashboard Admin - Control Escolar{% endblock %}
 
 {% block content %}
+{% if active_period %}
+<div class="mb-6 bg-sky-50 border-l-4 border-deepBlue p-4 rounded shadow-sm flex items-center justify-between ring-1 ring-skyBlue ring-opacity-20">
+    <div>
+        <span class="text-xs font-black uppercase text-deepBlue tracking-widest block mb-1">Periodo Escolar Activo</span>
+        <span class="text-xl font-bold text-charcoal">{{ active_period.name }}</span>
+        <span class="text-sm text-gray-500 ml-2">({{ active_period.start_date }} al {{ active_period.end_date }})</span>
+    </div>
+    <a href="{{ url_for('admin.manage_periods') }}" class="bg-white hover:bg-gray-50 text-deepBlue font-bold py-2 px-4 rounded border border-skyBlue border-opacity-30 text-sm transition-colors">
+        Cambiar Periodo
+    </a>
+</div>
+{% endif %}
+
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- Stats Cards -->
     <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-deepBlue ring-1 ring-skyBlue ring-opacity-30">
@@ -46,6 +59,10 @@
         <a href="{{ url_for('admin.list_reports') }}" class="p-4 border border-skyBlue border-opacity-30 rounded-lg hover:bg-offWhite transition-colors text-center">
             <i class="fas fa-file-alt text-3xl mb-2 text-deepBlue block"></i>
             <span class="font-bold text-charcoal">Boletas</span>
+        </a>
+        <a href="{{ url_for('admin.manage_periods') }}" class="p-4 border border-skyBlue border-opacity-30 rounded-lg hover:bg-offWhite transition-colors text-center">
+            <i class="fas fa-calendar-alt text-3xl mb-2 text-goldenYellow block"></i>
+            <span class="font-bold text-charcoal">Trimestres</span>
         </a>
     </div>
 </div>

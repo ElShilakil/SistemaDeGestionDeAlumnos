@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from extensions import db
-from models import Student, TeacherAssignment, Activity, Grade, Attendance, Subject
+from models import Student, TeacherAssignment, Activity, Grade, Attendance, Subject, SchoolPeriod
 from decorators import login_required
 from datetime import datetime
 
@@ -17,7 +17,11 @@ def teacher_dashboard():
     students = Student.query.filter_by(grade=assignment.grade, group=assignment.group, is_active=True).all()
     students = sorted(students, key=lambda x: x.last_name_paternal)
     
-    return render_template('teacher/dashboard.html', assignment=assignment, students=students)
+    active_period = SchoolPeriod.query.filter_by(is_active=True).first()
+    return render_template('teacher/dashboard.html', 
+                           assignment=assignment, 
+                           students=students, 
+                           active_period=active_period)
 
 @teacher_bp.route('/attendance', methods=['GET', 'POST'])
 @login_required(permission='MANAGE_ATTENDANCE')
@@ -30,7 +34,6 @@ def manage_attendance():
     students = Student.query.filter_by(grade=assignment.grade, group=assignment.group, is_active=True).all()
     students = sorted(students, key=lambda x: x.last_name_paternal)
     
-    # Manejar fecha seleccionada por el usuario o usar la de hoy
     selected_date_str = request.form.get('date') if request.method == 'POST' else request.args.get('date')
     if selected_date_str:
         selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
@@ -59,28 +62,38 @@ def manage_attendance():
 @teacher_bp.route('/activities', methods=['GET', 'POST'])
 @login_required(permission='MANAGE_ACTIVITIES')
 def manage_activities():
+    active_period = SchoolPeriod.query.filter_by(is_active=True).first()
+    if not active_period:
+        flash("No hay un periodo escolar activo. Contacta al administrador.", "error")
+        return redirect(url_for('teacher.teacher_dashboard'))
+
     if request.method == 'POST':
         subject_id = request.form.get('subject_id')
         name = request.form.get('name')
         type = request.form.get('type')
         date_str = request.form.get('date')
         percentage = request.form.get('percentage')
-        
-        new_activity = Activity(
-            teacher_id=session['user_id'],
-            subject_id=subject_id,
-            name=name,
-            type=type,
-            date=datetime.strptime(date_str, '%Y-%m-%d').date(),
-            percentage_value=float(percentage)
-        )
-        db.session.add(new_activity)
-        db.session.commit()
-        flash("Actividad creada con éxito.", "success")
+        activity_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+        if activity_date < active_period.start_date or activity_date > active_period.end_date:
+            flash(f"La fecha debe estar dentro del periodo activo ({active_period.name}: {active_period.start_date} a {active_period.end_date}).", "error")
+        else:
+            new_activity = Activity(
+                teacher_id=session['user_id'],
+                subject_id=subject_id,
+                period_id=active_period.id,
+                name=name,
+                type=type,
+                date=activity_date,
+                percentage_value=float(percentage)
+            )
+            db.session.add(new_activity)
+            db.session.commit()
+            flash("Actividad creada con éxito.", "success")
     
     subjects = Subject.query.all()
     activities = Activity.query.filter_by(teacher_id=session['user_id']).order_by(Activity.date.desc()).all()
-    return render_template('teacher/activities.html', subjects=subjects, activities=activities)
+    return render_template('teacher/activities.html', subjects=subjects, activities=activities, active_period=active_period)
 
 @teacher_bp.route('/gradebook', methods=['GET', 'POST'])
 @login_required(permission='MANAGE_GRADES')
@@ -90,10 +103,19 @@ def gradebook():
         flash("No tienes un grupo asignado.", "error")
         return redirect(url_for('teacher.teacher_dashboard'))
 
+    periods = SchoolPeriod.query.order_by(SchoolPeriod.start_date).all()
+    active_period = SchoolPeriod.query.filter_by(is_active=True).first()
+    
+    selected_period_id = request.args.get('period_id', active_period.id if active_period else None)
+    
     students = Student.query.filter_by(grade=assignment.grade, group=assignment.group, is_active=True).all()
     students = sorted(students, key=lambda x: x.last_name_paternal)
 
-    activities = Activity.query.filter_by(teacher_id=session['user_id']).order_by(Activity.subject_id, Activity.date).all()
+    activities_query = Activity.query.filter_by(teacher_id=session['user_id'])
+    if selected_period_id:
+        activities_query = activities_query.filter_by(period_id=selected_period_id)
+    
+    activities = activities_query.order_by(Activity.subject_id, Activity.date).all()
     
     if request.method == 'POST':
         for student in students:
@@ -111,8 +133,13 @@ def gradebook():
         
         db.session.commit()
         flash("Calificaciones guardadas con éxito.", "success")
-        return redirect(url_for('teacher.gradebook'))
+        return redirect(url_for('teacher.gradebook', period_id=selected_period_id))
 
     existing_grades = {(g.student_id, g.activity_id): g.score for g in Grade.query.all()}
     
-    return render_template('teacher/gradebook.html', students=students, activities=activities, existing_grades=existing_grades)
+    return render_template('teacher/gradebook.html', 
+                           students=students, 
+                           activities=activities, 
+                           existing_grades=existing_grades,
+                           periods=periods,
+                           selected_period_id=int(selected_period_id) if selected_period_id else None)
