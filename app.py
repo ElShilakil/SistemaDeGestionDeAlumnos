@@ -34,7 +34,6 @@ if __name__ == '__main__':
         try:
             db.create_all()
             create_admin()
-            seed_data()
             print("Database setup complete.")
         except Exception as e:
             print(f"Error: {e}")
