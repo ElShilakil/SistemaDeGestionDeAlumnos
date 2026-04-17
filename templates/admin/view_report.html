@@ -45,34 +45,41 @@
             </div>
         </div>
 
-        <!-- Grade Table per Trimester -->
-        {% for term_info in report_data %}
+        <!-- Grade Table with 3 Trimester Columns -->
         <div class="mb-10">
-            <h3 class="text-institutionalBlue font-black text-xl mb-4 border-l-4 border-institutionalBlue pl-2">{{ term_info.term.name }}</h3>
             <table class="w-full border-collapse border-2 border-gray-800">
                 <thead>
-                    <tr class="bg-gray-800 text-white text-xs uppercase">
+                    <tr class="bg-gray-800 text-white text-[10px] uppercase">
                         <th class="p-3 border border-gray-800 text-left">Campo Formativo / Materia</th>
-                        <th class="p-3 border border-gray-800 text-center w-32">Promedio</th>
+                        {% for period in periods %}
+                        <th class="p-3 border border-gray-800 text-center w-24">T{{ loop.index }}</th>
+                        {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for field, data in term_info.field_data.items() %}
+                    {% for field, data in report_matrix.items() %}
                     <tr class="bg-gray-100 font-black">
-                        <td class="p-3 border border-gray-800 uppercase text-institutionalBlue text-sm">{{ field }}</td>
-                        <td class="p-3 border border-gray-800 text-center text-lg">{{ "%.1f"|format(data.average) }}</td>
+                        <td class="p-3 border border-gray-800 uppercase text-institutionalBlue text-xs">{{ field }}</td>
+                        {% for period in periods %}
+                        <td class="p-3 border border-gray-800 text-center text-sm">
+                            {{ "%.1f"|format(data.averages[period.id]) if data.averages[period.id] > 0 else '-' }}
+                        </td>
+                        {% endfor %}
                     </tr>
-                        {% for subj in data.subjects %}
-                        <tr class="italic text-gray-700 text-sm">
-                            <td class="p-2 border border-gray-800 pl-10">{{ subj.name }}</td>
-                            <td class="p-2 border border-gray-800 text-center">{{ "%.1f"|format(subj.average) }}</td>
+                        {% for sid, sdata in data.subjects.items() %}
+                        <tr class="italic text-gray-700 text-[11px]">
+                            <td class="p-2 border border-gray-800 pl-10">{{ sdata.name }}</td>
+                            {% for period in periods %}
+                            <td class="p-2 border border-gray-800 text-center">
+                                {{ "%.1f"|format(sdata.scores[period.id]) if sdata.scores[period.id] > 0 else '-' }}
+                            </td>
+                            {% endfor %}
                         </tr>
                         {% endfor %}
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        {% endfor %}
 
         <!-- Footer -->
         <div class="flex justify-between items-end mt-20">

@@ -1,12 +1,52 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from extensions import db
-from models import User, Student, TeacherAssignment, Subject, Grade, SchoolLevel, AcademicTerm, Activity
+from models import User, Student, TeacherAssignment, Subject, Grade, SchoolLevel, AcademicTerm, Activity, SchoolPeriod
 from decorators import login_required
 from sqlalchemy.exc import IntegrityError
 import re
 from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+@admin_bp.route('/periods', methods=['GET', 'POST'])
+@login_required(permission='MANAGE_STUDENTS')
+def manage_periods():
+    if request.method == 'POST':
+        period_id = request.form.get('period_id')
+        start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date()
+        end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date()
+        is_active = 'is_active' in request.form
+        
+        period = SchoolPeriod.query.get(period_id)
+        if period:
+            # Basic validation: start before end
+            if start_date >= end_date:
+                flash(f"Error en {period.name}: La fecha de inicio debe ser anterior a la de fin.", "error")
+            else:
+                # If activating, deactivate others
+                if is_active:
+                    SchoolPeriod.query.update({SchoolPeriod.is_active: False})
+                
+                period.start_date = start_date
+                period.end_date = end_date
+                period.is_active = is_active
+                db.session.commit()
+                flash(f"Periodo {period.name} actualizado.", "success")
+                
+    periods = SchoolPeriod.query.order_by(SchoolPeriod.id).all()
+    # Ensure 3 periods exist
+    if len(periods) < 3:
+        for i in range(len(periods) + 1, 4):
+            new_p = SchoolPeriod(
+                name=f"Trimestre {i}", 
+                start_date=datetime.now().date(), 
+                end_date=datetime.now().date()
+            )
+            db.session.add(new_p)
+        db.session.commit()
+        periods = SchoolPeriod.query.order_by(SchoolPeriod.id).all()
+        
+    return render_template('admin/periods.html', periods=periods)
 
 @admin_bp.route('/dashboard')
 @login_required(permission='MANAGE_STUDENTS')
@@ -300,8 +340,8 @@ def list_reports():
 def view_report_card(student_id):
     student = Student.query.get_or_404(student_id)
     
-    # Get all terms for this student's level
-    terms = AcademicTerm.query.filter_by(school_level_id=student.school_level_id, is_active=True).order_by(AcademicTerm.term_number).all()
+    # REQ: 3 periods (T1, T2, T3)
+    periods = SchoolPeriod.query.order_by(SchoolPeriod.id).limit(3).all()
     
     formative_fields = [
         "Lenguajes",
@@ -310,41 +350,45 @@ def view_report_card(student_id):
         "De lo humano y lo comunitario"
     ]
     
-    report_data = [] # List of terms with their data
-    
-    for term in terms:
-        field_data = {}
-        for field in formative_fields:
-            field_data[field] = {'subjects': [], 'average': 0}
-            
+    # Structure: field_name -> { subjects: { name -> { t1, t2, t3 } }, average: { t1, t2, t3 } }
+    report_matrix = {}
+    for field in formative_fields:
+        report_matrix[field] = {'subjects': {}, 'averages': {p.id: 0 for p in periods}}
+        
+    subjects = Subject.query.all()
+    for subj in subjects:
+        report_matrix[subj.formative_field]['subjects'][subj.id] = {
+            'name': subj.name,
+            'scores': {p.id: 0 for p in periods}
+        }
+        
+    for period in periods:
         grades = Grade.query.join(Activity).filter(
             Grade.student_id == student_id,
-            Activity.term_id == term.id
+            Activity.period_id == period.id
         ).all()
         
-        subject_scores = {}
+        # Calculate subject averages for this period
+        subj_totals = {} # subj_id -> [scores]
         for g in grades:
-            subj = g.activity.subject
-            if subj.id not in subject_scores:
-                subject_scores[subj.id] = {
-                    'name': subj.name,
-                    'field': subj.formative_field,
-                    'scores': []
-                }
-            subject_scores[subj.id]['scores'].append(g.score)
+            sid = g.activity.subject_id
+            if sid not in subj_totals: subj_totals[sid] = []
+            subj_totals[sid].append(g.score)
             
-        for sid, data in subject_scores.items():
-            data['average'] = sum(data['scores']) / len(data['scores']) if data['scores'] else 0
-            field_data[data['field']]['subjects'].append(data)
+        for sid, scores in subj_totals.items():
+            avg = sum(scores) / len(scores)
+            field = Subject.query.get(sid).formative_field
+            report_matrix[field]['subjects'][sid]['scores'][period.id] = avg
             
-        for field in field_data:
-            subjs = field_data[field]['subjects']
-            if subjs:
-                field_data[field]['average'] = sum(s['average'] for s in subjs) / len(subjs)
-        
-        report_data.append({
-            'term': term,
-            'field_data': field_data
-        })
-            
-    return render_template('admin/view_report.html', student=student, report_data=report_data, today=datetime.now())
+    # Calculate field averages per period
+    for field in formative_fields:
+        for period in periods:
+            subjs_in_field = [s for s in report_matrix[field]['subjects'].values() if s['scores'][period.id] > 0]
+            if subjs_in_field:
+                report_matrix[field]['averages'][period.id] = sum(s['scores'][period.id] for s in subjs_in_field) / len(subjs_in_field)
+
+    return render_template('admin/view_report.html', 
+                           student=student, 
+                           report_matrix=report_matrix, 
+                           periods=periods,
+                           today=datetime.now())

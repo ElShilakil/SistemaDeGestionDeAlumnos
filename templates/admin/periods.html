@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Configurar Trimestres - Control Escolar{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="text-institutionalBlue hover:underline flex items-center">
+        <i class="fas fa-arrow-left mr-2"></i> Volver al Panel
+    </a>
+    <h1 class="text-3xl font-bold text-gray-800 mt-4 uppercase tracking-tight">Configuración de Ciclo Escolar (Trimestres)</h1>
+</div>
+
+<div class="max-w-5xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for period in periods %}
+        <div class="bg-white p-6 rounded-lg shadow-md border-t-4 {% if period.is_active %}border-emeraldGreen ring-2 ring-emeraldGreen ring-opacity-20{% else %}border-deepBlue{% endif %} transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-black text-charcoal uppercase tracking-tight">{{ period.name }}</h2>
+                {% if period.is_active %}
+                <span class="bg-emeraldGreen text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-widest">Activo</span>
+                {% endif %}
+            </div>
+            
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="period_id" value="{{ period.id }}">
+                
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Fecha de Inicio</label>
+                    <input type="date" name="start_date" value="{{ period.start_date }}" class="w-full border-2 border-gray-100 rounded-lg p-2 focus:border-deepBlue outline-none text-sm font-bold" required>
+                </div>
+                
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Fecha de Fin</label>
+                    <input type="date" name="end_date" value="{{ period.end_date }}" class="w-full border-2 border-gray-100 rounded-lg p-2 focus:border-deepBlue outline-none text-sm font-bold" required>
+                </div>
+                
+                <div class="flex items-center gap-2 pt-2">
+                    <input type="checkbox" name="is_active" id="active_{{ period.id }}" class="w-4 h-4 accent-emeraldGreen" {% if period.is_active %}checked{% endif %}>
+                    <label for="active_{{ period.id }}" class="text-xs font-bold text-gray-600 uppercase cursor-pointer">Marcar como Trimestre Actual</label>
+                </div>
+                
+                <button type="submit" class="w-full bg-deepBlue hover:bg-blue-900 text-white font-black py-2 rounded shadow transition-colors uppercase tracking-widest text-xs">
+                    Actualizar Fechas
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="mt-8 p-4 bg-blue-50 border-l-4 border-deepBlue text-deepBlue text-sm rounded shadow-sm">
+        <p class="font-bold mb-1"><i class="fas fa-info-circle mr-2"></i> Nota Importante:</p>
+        <p>Asegúrate de que las fechas de inicio y fin no se traslapen entre trimestres. Solo un trimestre puede estar marcado como **Activo** a la vez; esto controlará a qué periodo se asignan automáticamente las nuevas actividades de los profesores.</p>
+    </div>
+</div>
+{% endblock %}

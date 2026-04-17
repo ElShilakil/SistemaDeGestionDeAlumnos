@@ -81,19 +81,27 @@ class Subject(db.Model):
     name = db.Column(db.String(100), nullable=False)
     formative_field = db.Column(db.String(100), nullable=False)
 
+class SchoolPeriod(db.Model):
+    __tablename__ = 'school_periods'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False) # e.g., "Trimestre 1"
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    is_active = db.Column(db.Boolean, default=False)
+
 class Activity(db.Model):
     __tablename__ = 'activities'
     id = db.Column(db.Integer, primary_key=True)
     teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'), nullable=False)
-    term_id = db.Column(db.Integer, db.ForeignKey('academic_terms.id'))
+    period_id = db.Column(db.Integer, db.ForeignKey('school_periods.id'))
     name = db.Column(db.String(100), nullable=False)
     type = db.Column(db.String(20), nullable=False)
     date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
     percentage_value = db.Column(db.Float, nullable=False)
 
     subject = db.relationship('Subject', backref='activities')
-    term = db.relationship('AcademicTerm', backref='activities')
+    period = db.relationship('SchoolPeriod', backref='activities')
 
 class Grade(db.Model):
     __tablename__ = 'grades'
