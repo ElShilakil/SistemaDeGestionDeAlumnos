@@ -3,17 +3,34 @@
 {% block title %}Registro de Calificaciones - Control Escolar{% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <a href="{{ url_for('teacher.teacher_dashboard') }}" class="text-institutionalBlue hover:underline">&larr; Volver al Panel</a>
-    <h1 class="text-3xl font-bold text-gray-800 mt-4">Registro de Calificaciones</h1>
+<div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center">
+    <div>
+        <a href="{{ url_for('teacher.teacher_dashboard') }}" class="text-institutionalBlue hover:underline">&larr; Volver al Panel</a>
+        <h1 class="text-3xl font-bold text-gray-800 mt-4 uppercase tracking-tight">Registro de Calificaciones</h1>
+        <p class="text-gray-500 italic">Trimestre: <span class="font-black text-institutionalGold">{{ active_term.name if active_term else 'N/A' }}</span></p>
+    </div>
+    
+    <!-- Toolbar for REQ-06 -->
+    <div id="grade-toolbar" class="mt-4 md:mt-0 flex items-center gap-4 bg-white p-4 rounded-lg shadow-md border-b-4 border-institutionalGold sticky top-4 z-10 ring-1 ring-black ring-opacity-5">
+        <div class="text-[10px] font-black uppercase tracking-widest text-gray-400 mr-2">Acciones de Fila:</div>
+        <button type="button" onclick="enableSelectionEditing()" id="edit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-black px-4 py-2 rounded shadow text-xs uppercase tracking-widest transition-all opacity-50 cursor-not-allowed" disabled>
+            <i class="fas fa-edit mr-1"></i> Editar
+        </button>
+        <button type="button" onclick="document.getElementById('grade-form').submit()" id="save-btn" class="bg-emeraldGreen hover:bg-green-700 text-white font-black px-4 py-2 rounded shadow text-xs uppercase tracking-widest transition-all opacity-50 cursor-not-allowed" disabled>
+            <i class="fas fa-save mr-1"></i> Guardar
+        </button>
+        <button type="button" onclick="cancelEditing()" id="cancel-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-black px-4 py-2 rounded shadow text-xs uppercase tracking-widest transition-all hidden">
+            <i class="fas fa-times mr-1"></i> Cancelar
+        </button>
+    </div>
 </div>
 
 <div class="bg-white p-6 rounded-lg shadow-lg overflow-x-auto border-t-4 border-institutionalGold">
-    <form method="POST">
-        <table class="w-full text-left border-collapse min-w-max">
+    <form method="POST" id="grade-form">
+        <table class="w-full text-left border-collapse min-w-max" id="grade-table">
             <thead>
                 <tr class="bg-gray-100 border-b">
-                    <th class="p-4 font-semibold text-gray-700 sticky left-0 bg-gray-100 border-r">Alumno</th>
+                    <th class="p-4 font-semibold text-gray-700 sticky left-0 bg-gray-100 border-r z-20">Alumno</th>
                     {% for activity in activities %}
                     <th class="p-4 font-semibold text-gray-700 text-center border-r">
                         <div class="text-xs uppercase text-institutionalBlue">{{ activity.subject.name }}</div>
@@ -25,8 +42,8 @@
             </thead>
             <tbody>
                 {% for student in students %}
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-4 font-bold text-gray-800 sticky left-0 bg-white border-r">
+                <tr class="border-b hover:bg-blue-50 cursor-pointer transition-colors student-row" data-student-id="{{ student.id }}" onclick="selectRow(this)">
+                    <td class="p-4 font-bold text-gray-800 sticky left-0 bg-white border-r z-20 row-name">
                         {{ student.full_name }}
                     </td>
                     {% for activity in activities %}
@@ -34,25 +51,53 @@
                         <input type="number" step="0.1" min="0" max="10" 
                                name="score_{{ student.id }}_{{ activity.id }}" 
                                value="{{ existing_grades.get((student.id, activity.id)) or '' }}"
-                               class="w-20 border rounded p-1 text-center focus:ring-2 focus:ring-institutionalGold outline-none"
-                               placeholder="0.0">
+                               class="w-20 border rounded p-1 text-center focus:ring-2 focus:ring-institutionalGold outline-none bg-gray-50 text-gray-400 cursor-not-allowed grade-input"
+                               placeholder="0.0" disabled>
                     </td>
                     {% endfor %}
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-        <div class="mt-8 flex justify-end gap-4">
-            <button type="submit" class="bg-institutionalBlue hover:bg-blue-900 text-white font-bold py-3 px-10 rounded-lg shadow-md transition-colors">
-                Guardar Calificaciones
-            </button>
-            <a href="{{ url_for('teacher.teacher_dashboard') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-10 rounded-lg transition-colors">
-                Regresar
-            </a>
-        </div>
     </form>
 </div>
+
+<script>
+let selectedRow = null;
+
+function selectRow(row) {
+    if (selectedRow) {
+        selectedRow.classList.remove('bg-blue-100', 'ring-2', 'ring-blue-400', 'z-10');
+    }
+    
+    selectedRow = row;
+    selectedRow.classList.add('bg-blue-100', 'ring-2', 'ring-blue-400', 'z-10');
+    
+    // Update toolbar
+    document.getElementById('edit-btn').disabled = false;
+    document.getElementById('edit-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+}
+
+function enableSelectionEditing() {
+    if (!selectedRow) return;
+    
+    const inputs = selectedRow.querySelectorAll('.grade-input');
+    inputs.forEach(input => {
+        input.disabled = false;
+        input.classList.remove('bg-gray-50', 'text-gray-400', 'cursor-not-allowed');
+        input.classList.add('bg-white', 'text-gray-800');
+    });
+    
+    document.getElementById('edit-btn').classList.add('hidden');
+    document.getElementById('save-btn').disabled = false;
+    document.getElementById('save-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+    document.getElementById('cancel-btn').classList.remove('hidden');
+}
+
+function cancelEditing() {
+    location.reload();
+}
+</script>
 
 <div class="mt-6 p-4 bg-blue-50 text-blue-700 rounded-lg text-sm italic">
     * Las calificaciones deben estar en una escala del 0.0 al 10.0. Los campos vacíos no se guardarán.

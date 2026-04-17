@@ -47,7 +47,17 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-6 mb-8">
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2">Nivel Escolar</label>
+            <select name="school_level_id" class="w-full border rounded p-2 focus:ring-2 focus:ring-institutionalBlue outline-none" required>
+                {% for level in levels %}
+                <option value="{{ level.id }}" {% if student.school_level_id == level.id %}selected{% endif %}>{{ level.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+
             <div>
                 <label class="block text-gray-700 text-sm font-bold mb-2 uppercase">Grado</label>
                 <select name="grade" class="w-full border rounded p-2 focus:ring-2 focus:ring-institutionalGreen outline-none">

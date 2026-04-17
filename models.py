@@ -25,6 +25,23 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+class SchoolLevel(db.Model):
+    __tablename__ = 'school_levels'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    default_trimester_count = db.Column(db.Integer, default=3)
+
+class AcademicTerm(db.Model):
+    __tablename__ = 'academic_terms'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    school_level_id = db.Column(db.Integer, db.ForeignKey('school_levels.id'), nullable=False)
+    term_number = db.Column(db.Integer, nullable=False) # e.g. 1, 2, 3
+    is_active = db.Column(db.Boolean, default=True)
+
+    school_level = db.relationship('SchoolLevel', backref='terms')
+    __table_args__ = (UniqueConstraint('school_level_id', 'term_number', name='_level_term_uc'),)
+
 class Student(db.Model):
     __tablename__ = 'students'
     id = db.Column(db.Integer, primary_key=True)
@@ -37,8 +54,11 @@ class Student(db.Model):
     email_tutor = db.Column(db.String(120))
     grade = db.Column(db.Integer, nullable=False)
     group = db.Column(db.String(1), nullable=False)
+    school_level_id = db.Column(db.Integer, db.ForeignKey('school_levels.id'))
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+    school_level = db.relationship('SchoolLevel', backref='students')
 
     @property
     def full_name(self):
@@ -66,12 +86,14 @@ class Activity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'), nullable=False)
+    term_id = db.Column(db.Integer, db.ForeignKey('academic_terms.id'))
     name = db.Column(db.String(100), nullable=False)
     type = db.Column(db.String(20), nullable=False)
     date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
     percentage_value = db.Column(db.Float, nullable=False)
 
     subject = db.relationship('Subject', backref='activities')
+    term = db.relationship('AcademicTerm', backref='activities')
 
 class Grade(db.Model):
     __tablename__ = 'grades'
@@ -89,5 +111,21 @@ class Attendance(db.Model):
     __tablename__ = 'attendance'
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    term_id = db.Column(db.Integer, db.ForeignKey('academic_terms.id'))
     date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
     status = db.Column(db.String(20), nullable=False)
+
+    term = db.relationship('AcademicTerm', backref='attendance')
+
+class ActivityPercentageConfig(db.Model):
+    __tablename__ = 'activity_percentage_configs'
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    term_id = db.Column(db.Integer, db.ForeignKey('academic_terms.id'), nullable=False)
+    formative_field = db.Column(db.String(100), nullable=False)
+    activity_type = db.Column(db.String(20), nullable=False)
+    percentage = db.Column(db.Float, nullable=False)
+
+    teacher = db.relationship('User', backref='percentage_configs')
+    term = db.relationship('AcademicTerm', backref='percentage_configs')
+    __table_args__ = (UniqueConstraint('teacher_id', 'term_id', 'formative_field', 'activity_type', name='_teacher_term_field_type_uc'),)

@@ -1,22 +1,38 @@
 from extensions import db
-from models import User, Subject, Student, TeacherAssignment, Activity, Grade, Attendance
+from models import User, Subject, Student, TeacherAssignment, Activity, Grade, Attendance, SchoolLevel, AcademicTerm
 from datetime import datetime
 
 def create_admin():
-    if not User.query.filter_by(role='admin').first():
+    # REQ-01: Ensure exactly one initial admin record exists by checking for the specific email
+    admin_email = "admin1@cinsurgentes.edu.mx"
+    if not User.query.filter_by(email=admin_email).first():
         admin = User(
             first_name="Administrador", 
             last_name_paternal="Escolar",
             last_name_maternal="",
-            email="admin1@cinsurgentes.edu.mx", 
+            email=admin_email, 
             role="admin"
         )
         admin.set_password("admin123")
         db.session.add(admin)
         db.session.commit()
-        print("Admin user created: admin1@cinsurgentes.edu.mx / admin123")
+        print(f"Admin user created: {admin_email} / admin123")
 
 def seed_data():
+    # REQ-04: Default school level and trimesters
+    primaria = SchoolLevel.query.filter_by(name="Primaria").first()
+    if not primaria:
+        primaria = SchoolLevel(name="Primaria", default_trimester_count=3)
+        db.session.add(primaria)
+        db.session.commit()
+        print("School level 'Primaria' seeded.")
+        
+        for i in range(1, 4):
+            term = AcademicTerm(name=f"Trimestre {i}", school_level_id=primaria.id, term_number=i)
+            db.session.add(term)
+        db.session.commit()
+        print("Academic terms for Primaria seeded.")
+
     if not Subject.query.first():
         s1 = Subject(name="Matemáticas", formative_field="Saberes y pensamiento científico")
         s2 = Subject(name="Español", formative_field="Lenguajes")
@@ -38,6 +54,7 @@ def seed_data():
             print("Assignment seeded.")
 
     if not Student.query.first():
+        primaria = SchoolLevel.query.filter_by(name="Primaria").first()
         std = Student(
             curp="ABCD123456HDFRRR01", 
             first_name="María", 
@@ -45,6 +62,7 @@ def seed_data():
             last_name_maternal="Sosa", 
             grade=1, 
             group="A", 
+            school_level_id=primaria.id if primaria else None,
             nombre_tutor="Ana López", 
             telefono_tutor="555-1234", 
             email_tutor="ana@email.com"

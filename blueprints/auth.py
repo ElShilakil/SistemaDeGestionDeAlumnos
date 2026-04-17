@@ -18,8 +18,9 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        if not re.match(r'^.{6}@cinsurgentes\.edu\.mx$', email):
-            flash("El correo debe tener 6 caracteres y el dominio @cinsurgentes.edu.mx", "error")
+        # REQ-02: Prefix must be > 4 characters (min 5) before @cinsurgentes.edu.mx
+        if not re.match(r'^[^@]{5,}@cinsurgentes\.edu\.mx$', email):
+            flash("El correo debe tener al menos 5 caracteres antes del dominio @cinsurgentes.edu.mx", "error")
             return render_template('login.html')
 
         user = User.query.filter_by(email=email).first()

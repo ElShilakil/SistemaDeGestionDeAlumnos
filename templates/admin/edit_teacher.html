@@ -26,7 +26,7 @@
         </div>
         <div class="mb-4">
             <label class="block text-gray-700 text-sm font-bold mb-2">Correo Electrónico</label>
-            <input type="email" name="email" value="{{ teacher.email }}" class="w-full border rounded p-2 focus:ring-2 focus:ring-institutionalBlue outline-none" placeholder="usuario@cinsurgentes.edu.mx" pattern="^.{6}@cinsurgentes\.edu\.mx$" title="El correo debe tener exactamente 6 caracteres antes de @cinsurgentes.edu.mx" required>
+            <input type="email" name="email" value="{{ teacher.email }}" class="w-full border rounded p-2 focus:ring-2 focus:ring-institutionalBlue outline-none" placeholder="usuario@cinsurgentes.edu.mx" pattern="^[^@]{5,}@cinsurgentes\.edu\.mx$" title="El correo debe tener al menos 5 caracteres antes de @cinsurgentes.edu.mx" required>
         </div>
         <div class="mb-6 p-4 bg-gray-50 rounded border">
             <label class="block text-gray-700 text-sm font-bold mb-2">Cambiar Contraseña (Opcional)</label>

@@ -44,6 +44,15 @@
                     </div>
                 </div>
 
+                <div class="mb-4">
+                    <label class="block text-charcoal text-xs font-bold uppercase mb-2">Nivel Escolar</label>
+                    <select name="school_level_id" class="w-full border-2 border-gray-100 rounded p-2 focus:border-emeraldGreen outline-none transition-colors" required>
+                        {% for level in levels %}
+                        <option value="{{ level.id }}">{{ level.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block text-charcoal text-xs font-bold uppercase mb-2">Grado</label>
@@ -92,7 +101,7 @@
                             <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">CURP</th>
                             <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Nombre</th>
                             <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest text-center">G/G</th>
-                            <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Tutor</th>
+                            <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Tutor / Email</th>
                             <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -109,6 +118,7 @@
                             <td class="p-4 text-sm text-gray-700 font-bold">
                                 <div>{{ student.nombre_tutor or 'N/A' }}</div>
                                 <div class="text-[10px] text-gray-500 italic">{{ student.telefono_tutor or '' }}</div>
+                                <div class="text-[10px] text-emeraldGreen font-mono">{{ student.email_tutor or '' }}</div>
                             </td>
                             <td class="p-4 text-center flex gap-2 justify-center">
                                 <a href="{{ url_for('admin.edit_student', id=student.id) }}" class="text-emeraldGreen hover:text-green-800 text-xs font-black uppercase tracking-widest flex items-center">
