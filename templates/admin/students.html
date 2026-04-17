@@ -101,7 +101,8 @@
                             <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">CURP</th>
                             <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Nombre</th>
                             <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest text-center">G/G</th>
-                            <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Tutor / Email</th>
+                            <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Tutor</th>
+                            <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest">Email Tutor</th>
                             <th class="p-4 font-black text-charcoal uppercase text-xs tracking-widest text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -118,7 +119,9 @@
                             <td class="p-4 text-sm text-gray-700 font-bold">
                                 <div>{{ student.nombre_tutor or 'N/A' }}</div>
                                 <div class="text-[10px] text-gray-500 italic">{{ student.telefono_tutor or '' }}</div>
-                                <div class="text-[10px] text-emeraldGreen font-mono">{{ student.email_tutor or '' }}</div>
+                            </td>
+                            <td class="p-4 text-[10px] text-emeraldGreen font-mono font-bold">
+                                {{ student.email_tutor or 'N/A' }}
                             </td>
                             <td class="p-4 text-center flex gap-2 justify-center">
                                 <a href="{{ url_for('admin.edit_student', id=student.id) }}" class="text-emeraldGreen hover:text-green-800 text-xs font-black uppercase tracking-widest flex items-center">

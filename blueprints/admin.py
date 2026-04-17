@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from extensions import db
-from models import User, Student, TeacherAssignment, Subject, Grade
+from models import User, Student, TeacherAssignment, Subject, Grade, SchoolLevel, AcademicTerm, Activity
 from decorators import login_required
 from sqlalchemy.exc import IntegrityError
 import re
@@ -299,25 +299,10 @@ def list_reports():
 @login_required(permission='VIEW_REPORTS')
 def view_report_card(student_id):
     student = Student.query.get_or_404(student_id)
-    grades = Grade.query.filter_by(student_id=student_id).all()
     
-    subject_data = {}
-    for g in grades:
-        activity = g.activity
-        subj = activity.subject
-        if subj.id not in subject_data:
-            subject_data[subj.id] = {
-                'name': subj.name,
-                'field': subj.formative_field,
-                'scores': []
-            }
-        subject_data[subj.id]['scores'].append(g.score)
+    # Get all terms for this student's level
+    terms = AcademicTerm.query.filter_by(school_level_id=student.school_level_id, is_active=True).order_by(AcademicTerm.term_number).all()
     
-    for sid in subject_data:
-        scores = subject_data[sid]['scores']
-        subject_data[sid]['average'] = sum(scores) / len(scores) if scores else 0
-    
-    field_data = {}
     formative_fields = [
         "Lenguajes",
         "Saberes y pensamiento científico",
@@ -325,18 +310,41 @@ def view_report_card(student_id):
         "De lo humano y lo comunitario"
     ]
     
-    for field in formative_fields:
-        field_data[field] = {'subjects': [], 'average': 0}
-        
-    for sid in subject_data:
-        data = subject_data[sid]
-        field_data[data['field']]['subjects'].append(data)
-        
-    for field in field_data:
-        subjs = field_data[field]['subjects']
-        if subjs:
-            field_data[field]['average'] = sum(s['average'] for s in subjs) / len(subjs)
-        else:
-            field_data[field]['average'] = 0
+    report_data = [] # List of terms with their data
+    
+    for term in terms:
+        field_data = {}
+        for field in formative_fields:
+            field_data[field] = {'subjects': [], 'average': 0}
             
-    return render_template('admin/view_report.html', student=student, field_data=field_data, today=datetime.now())
+        grades = Grade.query.join(Activity).filter(
+            Grade.student_id == student_id,
+            Activity.term_id == term.id
+        ).all()
+        
+        subject_scores = {}
+        for g in grades:
+            subj = g.activity.subject
+            if subj.id not in subject_scores:
+                subject_scores[subj.id] = {
+                    'name': subj.name,
+                    'field': subj.formative_field,
+                    'scores': []
+                }
+            subject_scores[subj.id]['scores'].append(g.score)
+            
+        for sid, data in subject_scores.items():
+            data['average'] = sum(data['scores']) / len(data['scores']) if data['scores'] else 0
+            field_data[data['field']]['subjects'].append(data)
+            
+        for field in field_data:
+            subjs = field_data[field]['subjects']
+            if subjs:
+                field_data[field]['average'] = sum(s['average'] for s in subjs) / len(subjs)
+        
+        report_data.append({
+            'term': term,
+            'field_data': field_data
+        })
+            
+    return render_template('admin/view_report.html', student=student, report_data=report_data, today=datetime.now())

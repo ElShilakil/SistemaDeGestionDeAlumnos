@@ -7,7 +7,16 @@
     <div>
         <a href="{{ url_for('teacher.teacher_dashboard') }}" class="text-institutionalBlue hover:underline">&larr; Volver al Panel</a>
         <h1 class="text-3xl font-bold text-gray-800 mt-4 uppercase tracking-tight">Registro de Calificaciones</h1>
-        <p class="text-gray-500 italic">Trimestre: <span class="font-black text-institutionalGold">{{ active_term.name if active_term else 'N/A' }}</span></p>
+        <div class="flex items-center gap-4 mt-1">
+            <p class="text-gray-500 italic">Trimestre: <span class="font-black text-institutionalGold">{{ active_term.name if active_term else 'N/A' }}</span></p>
+            <form action="{{ url_for('teacher.set_term') }}" method="POST">
+                <select name="term_id" onchange="changeTermAjax(this)" class="border rounded p-1 text-xs font-black text-institutionalGold bg-white outline-none focus:ring-1 focus:ring-institutionalGold">
+                    {% for t in all_terms %}
+                    <option value="{{ t.id }}" {% if active_term and active_term.id == t.id %}selected{% endif %}>{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
     </div>
     
     <!-- Toolbar for REQ-06 -->

@@ -8,9 +8,11 @@ teacher_bp = Blueprint('teacher', __name__, url_prefix='/teacher')
 
 def get_active_term():
     term_id = session.get('active_term_id')
-    if not term_id:
-        assignment = TeacherAssignment.query.filter_by(teacher_id=session['user_id']).first()
+    user_id = session.get('user_id')
+    if not term_id and user_id:
+        assignment = TeacherAssignment.query.filter_by(teacher_id=user_id).first()
         if assignment:
+            # Get first student of that grade/group to find school level
             student = Student.query.filter_by(grade=assignment.grade, group=assignment.group).first()
             if student:
                 term = AcademicTerm.query.filter_by(school_level_id=student.school_level_id, is_active=True).first()
@@ -21,8 +23,12 @@ def get_active_term():
 
 @teacher_bp.context_processor
 def inject_terms():
+    user_id = session.get('user_id')
+    if not user_id:
+        return dict(active_term=None, all_terms=[])
+    
     active_term = get_active_term()
-    assignment = TeacherAssignment.query.filter_by(teacher_id=session.get('user_id')).first()
+    assignment = TeacherAssignment.query.filter_by(teacher_id=user_id).first()
     all_terms = []
     if assignment:
         student = Student.query.filter_by(grade=assignment.grade, group=assignment.group).first()
@@ -36,6 +42,8 @@ def set_term():
     term_id = request.form.get('term_id')
     if term_id:
         session['active_term_id'] = int(term_id)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'status': 'success', 'term_id': term_id})
         flash(f"Trimestre cambiado.", "info")
         return redirect(request.referrer or url_for('teacher.teacher_dashboard'))
     return redirect(url_for('teacher.teacher_dashboard'))
